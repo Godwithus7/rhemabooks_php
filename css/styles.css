@@ -37,3 +37,8 @@ img.details{
 #add-books-btn{
     margin-top: -35px;
 }
+
+.saved_image img{
+    width: 200px;
+    height: auto;
+}

@@ -3,28 +3,43 @@
     include 'includes/head.php';
     include 'includes/navigation.php';
 
+    $dbpath = '';
+
     if(isset($_GET['add']) || isset($_GET['edit'])){
         $categoryQuery = $db->query("SELECT * FROM category");
         $authorQuery = $db->query("SELECT * FROM author");
 
         $title = ((isset($_POST['title']) && $_POST['title'] != '')?sanitize($_POST['title']):'');
+        $price = ((isset($_POST['price']) && $_POST['price'] != '')?sanitize($_POST['price']):'');
+        $list_price = ((isset($_POST['list_price']) && $_POST['list_price'] != '')?sanitize($_POST['list_price']):'');
+        $category = ((isset($_POST['category']) && $_POST['category'] != '')?sanitize($_POST['category']):'');
+        $author = ((isset($_POST['author']) && $_POST['author'] != '')?sanitize($_POST['author']):'');
+        $quantity = ((isset($_POST['quantity']) && $_POST['quantity'] != '')?sanitize($_POST['quantity']):'');
+        $about_book = ((isset($_POST['about_book']) && $_POST['about_book'] != '')?sanitize($_POST['about_book']):'');
+        $saved_image = '';
 
         if (isset($_GET['edit'])) {
             $edit_id = (int)$_GET['edit'];
-            $bookresults = $db->query("SELECT * FROM books WHERE id = '$edit_id'");
-            $books = mysqli_fetch_assoc($bookresults);
+            $book_results = $db->query("SELECT * FROM books WHERE id = '$edit_id'");
+            $book = mysqli_fetch_assoc($book_results);
+            if((isset($_GET['delete_image']))){
+                $image_url = $_SERVER['DOCUMENT_ROOT'].$book['image'];echo $image_url;
+                unlink($image_url);
+                $db->query("UPDATE books SET image = '' WHERE id = '$edit_id'");
+                header('Location: books.php?edit='.$edit_id);
+            }
+            $title = ((isset($_POST['title']) && $_POST['title'] != '')?sanitize($_POST['title']):$book['title']);
+            $price = ((isset($_POST['price']) && $_POST['price'] != '')?sanitize($_POST['price']):$book['price']);
+            $list_price = ((isset($_POST['list_price']) && $_POST['list_price'] != '')?sanitize($_POST['list_price']):$book['list_price']);
+            $category = ((isset($_POST['category']) && $_POST['category'] != '')?sanitize($_POST['category']):$book['category']);
+            $author = ((isset($_POST['author']) && $_POST['author'] != '')?sanitize($_POST['author']):$book['author']);
+            $quantity = ((isset($_POST['quantity']) && $_POST['quantity'] != '')?sanitize($_POST['quantity']):$book['quantity']);
+            $about_book = ((isset($_POST['about_book']) && $_POST['about_book'] != '')?sanitize($_POST['about_book']):$book['about_book']);
+            $saved_image = (($book['image'] != '')?$book['image']:'');
+            $dbpath = $saved_image;
         }
 
         if($_POST){
-            $title = sanitize($_POST['title']);
-            $price = sanitize($_POST['price']);
-            $list_price = sanitize($_POST['list_price']);
-            $category = sanitize($_POST['category']);
-            $author = sanitize($_POST['author']);
-            $quantity = sanitize($_POST['quantity']);
-            $about_book = sanitize($_POST['about_book']);
-            $dbpath = '';
-            
             $required = array('title', 'price', 'category', 'author', 'quantity', 'about_book');
             foreach($required as $field){
                 if($_POST[$field]==''){
@@ -70,6 +85,10 @@
                 move_uploaded_file($tmpLoc, $uploadPath);
                 $insertSql = "INSERT INTO books (`title`, `price`, `list_price`, `category`, `author`, `quantity`, `about_book`, `image`) 
                 VALUES ('$title', '$price', '$list_price', '$category', '$author', '$quantity', '$about_book', '$dbpath')";
+                if(isset($_GET['edit'])){
+                    $insertSql = "UPDATE books SET `title` = '$title', `price` = '$price', `list_price` = '$list_price', `category` = '$category', `author` = '$author', 
+                    `quantity` = '$quantity', `about_book` = '$about_book', `image` = '$dbpath' WHERE id = '$edit_id'";
+                }
                 $db->query($insertSql);
                 header('Location: books.php');
             }
@@ -90,14 +109,14 @@
                         <div class="col-md-5">
                             <div class="form-group">
                                 <label for="price">Price*</label>
-                                <input type="text" name="price" class="form-control" id="price" value="<?=((isset($_POST['price']))?sanitize($_POST['price']):'');?>">
+                                <input type="text" name="price" class="form-control" id="price" value="<?=$price?>">
                             </div>
                         </div>
 
                         <div class="col-md-5 pull-right">
                             <div class="form-group">
                                 <label for="list_price">List Price</label>
-                                <input type="text" name="list_price" class="form-control" id="list_price" value="<?=((isset($_POST['list_price']))?sanitize($_POST['list_price']):'');?>">
+                                <input type="text" name="list_price" class="form-control" id="list_price" value="<?=$list_price?>">
                             </div>
                         </div>
                     </div>
@@ -107,9 +126,9 @@
                             <div class="form-group">
                                 <label for="category">Category*</label>
                                 <select name="category" id="category" class="form-control">
-                                    <option value="<?=((isset($_POST['category']) && $_POST['category'] == '')?' selected':'');?>"></option>
-                                    <?php while($category = mysqli_fetch_assoc($categoryQuery)):?>
-                                        <option value="<?=$category['id']?>"<?=((isset($_POST['category']) && $_POST['category'] == $category['id'])?' selected':'');?>><?=$category['category'];?></option>
+                                    <option value=""<?=(($category == '')?' selected':'');?>></option>
+                                    <?php while($cat = mysqli_fetch_assoc($categoryQuery)):?>
+                                        <option value="<?=$cat['id']?>"<?=(($category == $cat['id'])?' selected':'');?>><?=$cat['category'];?></option>
                                     <?php endwhile;?>
                                 </select>
                             </div>
@@ -119,9 +138,9 @@
                             <div class="form-group">
                                 <label for="author">Author*</label>
                                 <select name="author" id="author" class="form-control">
-                                    <option value="<?=((isset($_POST['author']) && $_POST['author'] == '')?' selected':'');?>"></option>
-                                    <?php while($author = mysqli_fetch_assoc($authorQuery)):?>
-                                        <option value="<?=$author['id']?>"<?=((isset($_POST['author']) && $_POST['author'] == $author['id'])?' selected':'');?>><?=$author['author'];?></option>
+                                <option value=""<?=(($author == '')?' selected':'');?>></option>
+                                    <?php while($auth = mysqli_fetch_assoc($authorQuery)):?>
+                                        <option value="<?=$auth['id']?>"<?=(($author == $auth['id'])?' selected':'');?>><?=$auth['author'];?></option>
                                     <?php endwhile;?>
                                 </select>
                             </div>
@@ -131,22 +150,29 @@
                     <div class="row">
                         <div class="col-md-5">
                             <div class="form-group">
-                                <label for="image">Book Image*</label>
-                                <input type="file" name="image" class="form-control" id="image">
+                                <?php if($saved_image != ''):?>
+                                    <div class="saved_image">
+                                        <img src="<?=$saved_image;?>" alt="saved_image"><br>
+                                        <a href="books.php?delete_image=1&edit=<?=$edit_id;?>" class="text-danger">Delete Image</a>
+                                    </div>
+                                    <?php else: ?>
+                                    <label for="image">Book Image*</label>
+                                    <input type="file" name="image" class="form-control" id="image">
+                                <?php endif;?>
                             </div>
                         </div>
 
                         <div class="col-md-5 pull-right">
                             <div class="form-group">
                                 <label for="quantity">Quantity*</label><br>
-                                <input type="text" name="quantity" class="form-control" id="quantity" value="<?=((isset($_POST['quantity']))?sanitize($_POST['quantity']):'');?>">
+                                <input type="text" name="quantity" class="form-control" id="quantity" value="<?=$quantity?>">
                             </div>
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label for="about_book">About Book*</label>
-                        <textarea name="about_book" class="form-control" rows="5" id="about_book"><?=((isset($_POST['about_book']))?sanitize($_POST['about_book']):'');?></textarea>
+                        <textarea name="about_book" class="form-control" rows="5" id="about_book"><?=$about_book?></textarea>
                     </div>
                     
                     <div class="form-group col-md-3 pull-right">
