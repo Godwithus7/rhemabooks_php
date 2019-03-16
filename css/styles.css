@@ -1,0 +1,39 @@
+body{
+    padding-top: 50px;
+}
+
+#headerWrapper{
+    position: relative;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    height: 520px;
+    background-image: url(../images/pexels-photo-137024398.jpeg);
+    background-repeat: no-repeat;
+    background-size: 100% 1000px;
+    background-position: top center;
+    background-attachment: fixed;
+}
+
+.img-thumb{
+    width:auto;
+    height: 200px;
+}
+
+#footer{
+    margin-top: 50px;
+}
+
+img.details{
+    width: 60%;
+    margin: 15px auto;
+}
+
+.table-auto{
+    width: auto;
+    margin: 0 auto;
+}
+
+#add-books-btn{
+    margin-top: -35px;
+}
